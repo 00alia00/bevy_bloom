@@ -1,0 +1,24 @@
+[package]
+name = "bevy_bloom"
+version = "0.1.0"
+edition = "2018"
+authors = [
+    "Alia McCutcheon <alia.mccutcheon@gmail.com>",
+]
+license = "MIT"
+keywords = ["bevy","bloom","blur"]
+
+[dependencies]
+bevy_reflect = "0.5.0"
+bevy_asset = "0.5.0"
+bevy_app = "0.5.0"
+bevy_render = "0.5.0"
+bevy_ecs = "0.5.0"
+bevy_window = "0.5.0"
+
+# [[example]]
+# name = "test_bloom"
+# path = "examples/test_bloom.rs"
+
+# [dev-dependencies]
+# bevy = "0.5.0"
