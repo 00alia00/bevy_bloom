@@ -10,6 +10,10 @@ use bevy_render::{
 pub const BLUR_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 13148362314012771387); // TODO: get real UUID
 
+//
+// TODO: These should be the same struct just with the horizontal field set differently, i havent found a way to do that yet
+//
+
 #[derive(RenderResources, ShaderDefs, Default, TypeUuid)]
 #[uuid = "17f7cff3-c567-4592-b8dd-9b076fc8f46c"]
 pub struct BlurHorizontal {

@@ -1,10 +1,7 @@
 pub mod render_graph;
 
 use bevy_app::prelude::*;
-use bevy_asset::{
-    AddAsset, 
-    // Assets, Handle
-};
+use bevy_asset::AddAsset;
 use bevy_ecs::prelude::IntoSystem;
 use bevy_render::shader;
 
@@ -30,7 +27,7 @@ impl Plugin for BloomPlugin {
         add_bloom_graph(app.world_mut());
 
         // Not sure i need this at all
-        
+
         // let mut material_hoizonal = app
         //     .world_mut()
         //     .get_resource_mut::<Assets<BlurHorizontal>>()
