@@ -5,7 +5,7 @@ use bevy_asset::AddAsset;
 use bevy_ecs::prelude::IntoSystem;
 use bevy_render::shader;
 
-use render_graph::{add_bloom_graph, BlurHorizontal, BlurVertical, Brightness};
+use render_graph::{add_bloom_graph, Brightness, BlurHorizontal, BlurVertical, Combine};
 
 #[derive(Default)]
 pub struct BloomPlugin;
@@ -23,35 +23,8 @@ impl Plugin for BloomPlugin {
         );
 
         app.add_asset::<Brightness>();
+        app.add_asset::<Combine>();
 
         add_bloom_graph(app.world_mut());
-
-        // Not sure i need this at all
-
-        // let mut material_hoizonal = app
-        //     .world_mut()
-        //     .get_resource_mut::<Assets<BlurHorizontal>>()
-        //     .unwrap();
-
-        // material_hoizonal.set_untracked(
-        //     Handle::<BlurHorizontal>::default(),
-        //     BlurHorizontal {
-        //         horizontal: true,
-        //         ..Default::default()
-        //     },
-        // );
-
-        // let mut material_vertical = app
-        //     .world_mut()
-        //     .get_resource_mut::<Assets<BlurVertical>>()
-        //     .unwrap();
-
-        // material_vertical.set_untracked(
-        //     Handle::<BlurVertical>::default(),
-        //     BlurVertical {
-        //         horizontal: false,
-        //         ..Default::default()
-        //     },
-        // );
     }
 }
