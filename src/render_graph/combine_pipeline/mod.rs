@@ -1,11 +1,7 @@
 use bevy_asset::{Assets, Handle, HandleUntyped};
 use bevy_reflect::TypeUuid;
-use bevy_render::{
-    pipeline::PipelineDescriptor,
-    renderer::RenderResources,
-    shader::{Shader, ShaderDefs, ShaderStage, ShaderStages},
-    texture::Texture,
-};
+use bevy_render::{pipeline::PipelineDescriptor, render_graph::{Node, ResourceSlotInfo}, renderer::{RenderResources, RenderResourceType}, shader::{Shader, ShaderDefs, ShaderStage, ShaderStages}, texture::Texture};
+use std::borrow::Cow;
 
 pub const COMBINE_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 13148362314012771386); // TODO: get real UUID
@@ -17,10 +13,28 @@ pub struct Combine {
     pub bright_and_blur: Handle<Texture>,
 }
 
-// // TODO: how do we define outputs?
-// impl Combine{
+impl Combine{
+    pub const OUT_TEXTURE: &'static str = "texture";
+}
+
+// impl Node for Combine{
+
 //     fn output(&self) -> &[ResourceSlotInfo] {
-//         &[]
+//         static OUTPUT: &[ResourceSlotInfo] = &[ResourceSlotInfo {
+//             name: Cow::Borrowed(Combine::OUT_TEXTURE),
+//             resource_type: RenderResourceType::Texture,
+//         }];
+//         OUTPUT
+//     }
+
+//     fn update(
+//         &mut self,
+//         world: &bevy_ecs::prelude::World,
+//         render_context: &mut dyn bevy_render::renderer::RenderContext,
+//         input: &bevy_render::render_graph::ResourceSlots,
+//         output: &mut bevy_render::render_graph::ResourceSlots,
+//     ) {
+//         todo!()
 //     }
 // }
 

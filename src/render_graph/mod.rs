@@ -124,7 +124,7 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     // get a copy of the current window pixels
     graph.add_node(
-        node::PRIMARY_SWAP_CHAIN,
+        bloom::WINDOW_SAMPLED_COLOUR,
         WindowSwapChainNode::new(WindowId::primary()),
     );
 
@@ -141,7 +141,7 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     graph
         .add_slot_edge(
-            node::PRIMARY_SWAP_CHAIN,
+            bloom::WINDOW_SAMPLED_COLOUR,
             WindowSwapChainNode::OUT_TEXTURE,
             bloom::BRIGHTNESS_PASS,
             "brightness_input_texture",
@@ -149,23 +149,24 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
         .unwrap();
 
     // Blur brightness in horizontal and vertical directions
-    graph
-        .add_slot_edge(
-            bloom::BRIGHTNESS_PASS,
-            "texture",
-            bloom::BLUR_HORIZONTAL_PASS,
-            "horizontal_blur_texture",
-        )
-        .unwrap();
 
-    graph
-        .add_slot_edge(
-            bloom::BLUR_HORIZONTAL_PASS,
-            "texture",
-            bloom::BLUR_VERTICAL_PASS,
-            "vertical_blur_texture",
-        )
-        .unwrap();
+    // graph
+    //     .add_slot_edge(
+    //         bloom::BRIGHTNESS_PASS,
+    //         "brightness_input_texture",
+    //         bloom::BLUR_HORIZONTAL_PASS,
+    //         "horizontal_blur_texture",
+    //     )
+    //     .unwrap();
+
+    // graph
+    //     .add_slot_edge(
+    //         bloom::BLUR_HORIZONTAL_PASS,
+    //         "horizontal_blur_texture",
+    //         bloom::BLUR_VERTICAL_PASS,
+    //         "vertical_blur_texture",
+    //     )
+    //     .unwrap();
 
     // Combine output of blur (color_attachment) with original inputs (color_attachment) -> color_attachment0 / color_attachment1
 
@@ -181,7 +182,7 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
     graph
         .add_slot_edge(
             bloom::BLUR_VERTICAL_PASS,
-            "texture",
+            "vertical_blur_texture",
             bloom::COMBINE_PASS,
             "bright_and_blur",
         )
