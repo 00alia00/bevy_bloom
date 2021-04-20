@@ -7,7 +7,8 @@ use bevy_render::{
     },
     pipeline::PipelineDescriptor,
     render_graph::{
-        base, AssetRenderResourcesNode, PassNode, RenderGraph, SharedBuffersNode, TextureCopyNode,
+        // base, SharedBuffersNode,
+        AssetRenderResourcesNode, PassNode, RenderGraph, TextureCopyNode,
         WindowSwapChainNode, WindowTextureNode,
     },
     shader::Shader,
@@ -34,10 +35,7 @@ pub mod brightness {
 
 pub mod bloom {
     pub const INPUT_TEX: &str = "input_texture";
-    pub const SHARED_BUFFERS: &str = "shared_buffers";
-    pub const PRIMARY_SWAP_CHAIN: &str = "swapchain";
     pub const BLOOM_MAIN_PASS: &str = "bloom_main_pass";
-    pub const MAIN_PASS: &str = "main_pass";
     pub const MAIN_SAMPLED_COLOR_ATTACHMENT: &str = "main_pass_sampled_color_attachment";
 }
 
@@ -47,20 +45,15 @@ pub mod bloom {
 pub struct BloomPass;
 
 pub(crate) fn add_bloom_graph(world: &mut World) {
-
     // WIP WIP WIP
 
     ////////
     // THIS DOESNT WORK YET
     ////////
 
-
-
-
     let mut graph = world.get_resource_mut::<RenderGraph>().unwrap();
 
     graph.add_node(bloom::INPUT_TEX, TextureCopyNode::default());
-    graph.add_node(bloom::SHARED_BUFFERS, SharedBuffersNode::default());
 
     graph.add_system_node(
         blur::HORIZONTAL_0,
@@ -77,43 +70,34 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
         AssetRenderResourcesNode::<bright_pipeline::Brightness>::new(true),
     );
 
-    let main_pass_node = PassNode::<&BloomPass>::new(PassDescriptor {
-        color_attachments: vec![RenderPassColorAttachmentDescriptor {
-            attachment: TextureAttachment::Input("color_attachment".to_string()),
-            resolve_target: Some(TextureAttachment::Input("color_resolve_target".to_string())),
-            ops: Operations {
-                load: LoadOp::Load,
-                store: true,
+    // Eventually combine the output of the vertical and horizontal blur with the original input pixels
+    let bloom_combine_node = PassNode::<&BloomPass>::new(PassDescriptor {
+        color_attachments: vec![
+            RenderPassColorAttachmentDescriptor {
+                attachment: TextureAttachment::Input("color_attachment0".to_string()),
+                resolve_target: None,
+                ops: Operations {
+                    load: LoadOp::Load,
+                    store: true,
+                },
             },
-        }],
+            RenderPassColorAttachmentDescriptor {
+                attachment: TextureAttachment::Input("color_attachment1".to_string()),
+                resolve_target: None,
+                ops: Operations {
+                    load: LoadOp::Load,
+                    store: true,
+                },
+            },
+        ],
         sample_count: 1,
         depth_stencil_attachment: None,
     });
 
-    graph.add_node(bloom::BLOOM_MAIN_PASS, main_pass_node);
+    // TODO: figure out how to set the attachments and run a shader for the same node
+    graph.add_node(bloom::BLOOM_MAIN_PASS, bloom_combine_node);
 
-    graph.add_node(
-        bloom::PRIMARY_SWAP_CHAIN,
-        WindowSwapChainNode::new(WindowId::primary()),
-    );
-
-    graph
-        .add_node_edge(bloom::INPUT_TEX, bloom::BLOOM_MAIN_PASS)
-        .unwrap();
-
-    graph
-        .add_node_edge(bloom::SHARED_BUFFERS, bloom::BLOOM_MAIN_PASS)
-        .unwrap();
-
-    graph
-        .add_slot_edge(
-            bloom::PRIMARY_SWAP_CHAIN,
-            WindowSwapChainNode::OUT_TEXTURE,
-            bloom::BLOOM_MAIN_PASS,
-            "color_attachment",
-        )
-        .unwrap();
-
+    // get a copy of the current window pixels
     graph.add_node(
         bloom::MAIN_SAMPLED_COLOR_ATTACHMENT,
         WindowTextureNode::new(
@@ -133,18 +117,21 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
         ),
     );
 
+    // Link window pixels to the input texture
     graph
         .add_slot_edge(
             bloom::MAIN_SAMPLED_COLOR_ATTACHMENT,
             WindowSwapChainNode::OUT_TEXTURE,
-            bloom::BLOOM_MAIN_PASS,
-            "color_attachment",
-        )
+            bloom::INPUT_TEX,
+            WindowSwapChainNode::OUT_TEXTURE,//"color_attachment",
+         )
         .unwrap();
 
-    // Run brightness check
+    // The following assumes color_attachment is the slot that the texture is always in
+
+    // Link brightness to initial texture
     graph
-        .add_node_edge(brightness::BRIGHTNESS, base::node::MAIN_PASS)
+        .add_node_edge(brightness::BRIGHTNESS, bloom::INPUT_TEX)
         .unwrap();
 
     // Blur brightness in horizontal and vertical directions
@@ -155,11 +142,28 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
         .add_node_edge(blur::VERTICAL_0, blur::HORIZONTAL_0)
         .unwrap();
 
-    // Combine output of blur with original inputs
+    // Combine output of blur (color_attachment) with original inputs (color_attachment) -> color_attachment0 / color_attachment1
+
     graph
-        .add_node_edge(base::node::MAIN_PASS, blur::VERTICAL_0)
+        .add_slot_edge(
+            bloom::BLOOM_MAIN_PASS,
+            "color_attachment0",
+            bloom::INPUT_TEX,
+            "color_attachment",
+        )
         .unwrap();
-    
+
+    graph
+        .add_slot_edge(
+            bloom::BLOOM_MAIN_PASS,
+            "color_attachment1",
+            blur::VERTICAL_0,
+            "color_attachment",
+        )
+        .unwrap();
+
+    // Add pipelines
+
     let bright_pipeline =
         build_bright_pipeline(&mut world.get_resource_mut::<Assets<Shader>>().unwrap());
     let blur_pipeline =
