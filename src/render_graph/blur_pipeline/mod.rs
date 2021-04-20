@@ -1,7 +1,12 @@
 use bevy_asset::{Assets, Handle, HandleUntyped};
 use bevy_reflect::TypeUuid;
-use bevy_render::{pipeline::PipelineDescriptor, render_graph::{Node, ResourceSlotInfo}, renderer::{RenderResources, RenderResourceType}, shader::{Shader, ShaderDefs, ShaderStage, ShaderStages}, texture::Texture};
-use std::borrow::Cow;
+use bevy_render::{pipeline::PipelineDescriptor, 
+    // render_graph::{Node, ResourceSlotInfo}, 
+    renderer::{RenderResources,},// RenderResourceType},
+    shader::{Shader, ShaderDefs, ShaderStage, ShaderStages},
+    texture::Texture
+};
+// use std::borrow::Cow;
 
 pub const BLUR_PIPELINE_HANDLE: HandleUntyped =
     HandleUntyped::weak_from_u64(PipelineDescriptor::TYPE_UUID, 13148362314012771387); // TODO: get real UUID
@@ -30,27 +35,47 @@ pub struct BlurVertical {
     pub horizontal: bool,
 }
 
+// const OUT_TEXTURE: &'static str = "texture";
+
 // impl Node for BlurHorizontal{
-//     pub const OUT_TEXTURE: &'static str = "texture";
-    
+     
 //     fn output(&self) -> &[ResourceSlotInfo] {
 //         static OUTPUT: &[ResourceSlotInfo] = &[ResourceSlotInfo {
-//             name: Cow::Borrowed(BlurHorizontal::OUT_TEXTURE),
+//             name: Cow::Borrowed(OUT_TEXTURE),
 //             resource_type: RenderResourceType::Texture,
 //         }];
 //         OUTPUT
 //     }
+
+//     fn update(
+//         &mut self,
+//         world: &bevy_ecs::prelude::World,
+//         render_context: &mut dyn bevy_render::renderer::RenderContext,
+//         input: &bevy_render::render_graph::ResourceSlots,
+//         output: &mut bevy_render::render_graph::ResourceSlots,
+//     ) {
+//         todo!()
+//     }
 // }
 
 // impl  Node for BlurVertical{
-//     pub const OUT_TEXTURE: &'static str = "texture";
     
 //     fn output(&self) -> &[ResourceSlotInfo] {
 //         static OUTPUT: &[ResourceSlotInfo] = &[ResourceSlotInfo {
-//             name: Cow::Borrowed(BlurVertical::OUT_TEXTURE),
+//             name: Cow::Borrowed(OUT_TEXTURE),
 //             resource_type: RenderResourceType::Texture,
 //         }];
 //         OUTPUT
+//     }
+
+//     fn update(
+//         &mut self,
+//         world: &bevy_ecs::prelude::World,
+//         render_context: &mut dyn bevy_render::renderer::RenderContext,
+//         input: &bevy_render::render_graph::ResourceSlots,
+//         output: &mut bevy_render::render_graph::ResourceSlots,
+//     ) {
+//         todo!()
 //     }
 // }
 
