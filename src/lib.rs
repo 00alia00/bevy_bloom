@@ -5,7 +5,7 @@ use bevy_asset::AddAsset;
 use bevy_ecs::prelude::IntoSystem;
 use bevy_render::shader;
 
-use render_graph::{add_bloom_graph, Brightness, BlurHorizontal, BlurVertical, Combine};
+use render_graph::{add_bloom_graph, BlurHorizontal, BlurVertical, Brightness, Combine};
 
 #[derive(Default)]
 pub struct BloomPlugin;

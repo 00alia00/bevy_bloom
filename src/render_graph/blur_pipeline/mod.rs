@@ -1,10 +1,11 @@
 use bevy_asset::{Assets, Handle, HandleUntyped};
 use bevy_reflect::TypeUuid;
-use bevy_render::{pipeline::PipelineDescriptor, 
-    // render_graph::{Node, ResourceSlotInfo}, 
-    renderer::{RenderResources,},// RenderResourceType},
+use bevy_render::{
+    pipeline::PipelineDescriptor,
+    // render_graph::{Node, ResourceSlotInfo},
+    renderer::RenderResources, // RenderResourceType},
     shader::{Shader, ShaderDefs, ShaderStage, ShaderStages},
-    texture::Texture
+    texture::Texture,
 };
 // use std::borrow::Cow;
 
@@ -35,10 +36,18 @@ pub struct BlurVertical {
     pub horizontal: bool,
 }
 
+impl BlurHorizontal {
+    pub const TEXTURE: &'static str = "horizontal_blur_texture";
+}
+
+impl BlurVertical {
+    pub const TEXTURE: &'static str = "vertical_blur_texture";
+}
+
 // const OUT_TEXTURE: &'static str = "texture";
 
 // impl Node for BlurHorizontal{
-     
+
 //     fn output(&self) -> &[ResourceSlotInfo] {
 //         static OUTPUT: &[ResourceSlotInfo] = &[ResourceSlotInfo {
 //             name: Cow::Borrowed(OUT_TEXTURE),
@@ -59,7 +68,7 @@ pub struct BlurVertical {
 // }
 
 // impl  Node for BlurVertical{
-    
+
 //     fn output(&self) -> &[ResourceSlotInfo] {
 //         static OUTPUT: &[ResourceSlotInfo] = &[ResourceSlotInfo {
 //             name: Cow::Borrowed(OUT_TEXTURE),

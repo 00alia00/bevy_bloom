@@ -1,10 +1,11 @@
 use bevy_asset::{Assets, Handle, HandleUntyped};
 use bevy_reflect::TypeUuid;
-use bevy_render::{pipeline::PipelineDescriptor, 
-    // render_graph::{Node, ResourceSlotInfo}, 
-    renderer::{RenderResources,},// RenderResourceType},
+use bevy_render::{
+    pipeline::PipelineDescriptor,
+    // render_graph::{Node, ResourceSlotInfo},
+    renderer::RenderResources, // RenderResourceType},
     shader::{Shader, ShaderDefs, ShaderStage, ShaderStages},
-    texture::Texture
+    texture::Texture,
 };
 // use std::borrow::Cow;
 
@@ -17,9 +18,10 @@ pub struct Brightness {
     pub texture: Handle<Texture>,
 }
 
-// impl Brightness{
-//     pub const OUT_TEXTURE: &'static str = "texture";
-// }
+impl Brightness {
+    pub const TEXTURE: &'static str = "brightness_input_texture";
+    pub const OUT_TEXTURE: &'static str = "texture";
+}
 
 // impl Node for Brightness{
 

@@ -1,10 +1,11 @@
 use bevy_asset::{Assets, Handle, HandleUntyped};
 use bevy_reflect::TypeUuid;
-use bevy_render::{pipeline::PipelineDescriptor, 
-    // render_graph::{Node, ResourceSlotInfo}, 
-    renderer::{RenderResources,},// RenderResourceType},
+use bevy_render::{
+    pipeline::PipelineDescriptor,
+    // render_graph::{Node, ResourceSlotInfo},
+    renderer::RenderResources, // RenderResourceType},
     shader::{Shader, ShaderDefs, ShaderStage, ShaderStages},
-    texture::Texture
+    texture::Texture,
 };
 // use std::borrow::Cow;
 pub const COMBINE_PIPELINE_HANDLE: HandleUntyped =
@@ -17,9 +18,11 @@ pub struct Combine {
     pub bright_and_blur: Handle<Texture>,
 }
 
-// impl Combine{
-//     pub const OUT_TEXTURE: &'static str = "texture";
-// }
+impl Combine {
+    pub const TEXTURE_ORIGINAL: &'static str = "original_pixels";
+    pub const TEXTURE_BRIGHTBLUR: &'static str = "bright_and_blur";
+    pub const OUT_TEXTURE: &'static str = "texture";
+}
 
 // impl Node for Combine{
 

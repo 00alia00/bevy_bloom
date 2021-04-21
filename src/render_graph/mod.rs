@@ -11,11 +11,19 @@ use bevy_render::{
         // AssetRenderResourcesNode, TextureCopyNode,
         PassNode,
         RenderGraph,
-        WindowSwapChainNode,
+        TextureNode,
         //WindowTextureNode,
+        WindowSwapChainNode,
     },
     shader::Shader,
     //texture::{Extent3d, TextureDescriptor, TextureDimension, TextureFormat, TextureUsage},
+    texture::{
+        Extent3d,
+        SamplerDescriptor,
+        TextureDescriptor,
+        TextureDimension, //TextureFormat,
+        TextureUsage,
+    },
 };
 use bevy_window::WindowId;
 
@@ -36,11 +44,9 @@ pub mod bloom {
     pub const COMBINE_PASS: &str = "bloom_combine_pass";
 }
 
-pub mod node {
-    pub const PRIMARY_SWAP_CHAIN: &str = "swapchain";
-    pub const MAIN_PASS: &str = "main_pass";
-    pub const SHARED_BUFFERS: &str = "shared_buffers";
-}
+pub const TEXTURE_NODE0: &str = "texure_node0";
+pub const TEXTURE_NODE1: &str = "texure_node1";
+pub const TEXTURE_NODE2: &str = "texure_node2";
 
 /// A component that indicates that an entity should be drawn in the "bloom pass"
 #[derive(Clone, Debug, Default, Reflect)]
@@ -62,7 +68,7 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     let brightness_node = PassNode::<&bright_pipeline::Brightness>::new(PassDescriptor {
         color_attachments: vec![RenderPassColorAttachmentDescriptor {
-            attachment: TextureAttachment::Input("brightness_input_texture".to_string()),
+            attachment: TextureAttachment::Input(bright_pipeline::Brightness::TEXTURE.to_string()),
             resolve_target: None,
             ops: Operations {
                 load: LoadOp::Load,
@@ -75,7 +81,9 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     let horizontal_node = PassNode::<&blur_pipeline::BlurHorizontal>::new(PassDescriptor {
         color_attachments: vec![RenderPassColorAttachmentDescriptor {
-            attachment: TextureAttachment::Input("horizontal_blur_texture".to_string()),
+            attachment: TextureAttachment::Input(
+                blur_pipeline::BlurHorizontal::TEXTURE.to_string(),
+            ),
             resolve_target: None,
             ops: Operations {
                 load: LoadOp::Load,
@@ -88,7 +96,7 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     let vertical_node = PassNode::<&blur_pipeline::BlurVertical>::new(PassDescriptor {
         color_attachments: vec![RenderPassColorAttachmentDescriptor {
-            attachment: TextureAttachment::Input("vertical_blur_texture".to_string()),
+            attachment: TextureAttachment::Input(blur_pipeline::BlurVertical::TEXTURE.to_string()),
             resolve_target: None,
             ops: Operations {
                 load: LoadOp::Load,
@@ -102,7 +110,9 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
     let combine_node = PassNode::<&combine_pipeline::Combine>::new(PassDescriptor {
         color_attachments: vec![
             RenderPassColorAttachmentDescriptor {
-                attachment: TextureAttachment::Input("original_pixels".to_string()),
+                attachment: TextureAttachment::Input(
+                    combine_pipeline::Combine::TEXTURE_ORIGINAL.to_string(),
+                ),
                 resolve_target: None,
                 ops: Operations {
                     load: LoadOp::Load,
@@ -110,7 +120,9 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
                 },
             },
             RenderPassColorAttachmentDescriptor {
-                attachment: TextureAttachment::Input("bright_and_blur".to_string()),
+                attachment: TextureAttachment::Input(
+                    combine_pipeline::Combine::TEXTURE_BRIGHTBLUR.to_string(),
+                ),
                 resolve_target: None,
                 ops: Operations {
                     load: LoadOp::Load,
@@ -135,6 +147,65 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
     // Eventually combine the output of the vertical and horizontal blur with the original input pixels
     graph.add_node(bloom::COMBINE_PASS, combine_node);
 
+    graph
+        .add_node_edge(bloom::BRIGHTNESS_PASS, bloom::BLUR_HORIZONTAL_PASS)
+        .unwrap();
+    graph
+        .add_node_edge(bloom::BLUR_HORIZONTAL_PASS, bloom::BLUR_VERTICAL_PASS)
+        .unwrap();
+    graph
+        .add_node_edge(bloom::BLUR_VERTICAL_PASS, bloom::COMBINE_PASS)
+        .unwrap();
+    graph
+        .add_node_edge(bloom::WINDOW_SAMPLED_COLOUR, bloom::COMBINE_PASS)
+        .unwrap();
+
+    let size = Extent3d::new(512, 512, 1);
+    graph.add_node(
+        TEXTURE_NODE0,
+        TextureNode::new(
+            TextureDescriptor {
+                size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: Default::default(),
+                usage: TextureUsage::OUTPUT_ATTACHMENT | TextureUsage::SAMPLED,
+            },
+            Some(SamplerDescriptor::default()),
+            None,
+        ),
+    );
+    graph.add_node(
+        TEXTURE_NODE1,
+        TextureNode::new(
+            TextureDescriptor {
+                size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: Default::default(),
+                usage: TextureUsage::OUTPUT_ATTACHMENT | TextureUsage::SAMPLED,
+            },
+            Some(SamplerDescriptor::default()),
+            None,
+        ),
+    );
+    graph.add_node(
+        TEXTURE_NODE2,
+        TextureNode::new(
+            TextureDescriptor {
+                size,
+                mip_level_count: 1,
+                sample_count: 1,
+                dimension: TextureDimension::D2,
+                format: Default::default(),
+                usage: TextureUsage::OUTPUT_ATTACHMENT | TextureUsage::SAMPLED,
+            },
+            Some(SamplerDescriptor::default()),
+            None,
+        ),
+    );
     //
     // Links
     //
@@ -144,18 +215,33 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
             bloom::WINDOW_SAMPLED_COLOUR,
             WindowSwapChainNode::OUT_TEXTURE,
             bloom::BRIGHTNESS_PASS,
-            "brightness_input_texture",
+            bright_pipeline::Brightness::TEXTURE,
         )
         .unwrap();
 
     // Blur brightness in horizontal and vertical directions
 
+    graph
+        .add_node_edge(bloom::BRIGHTNESS_PASS, TEXTURE_NODE0)
+        .unwrap();
+    graph
+        .add_slot_edge(
+            bloom::BRIGHTNESS_PASS,
+            bright_pipeline::Brightness::TEXTURE,
+            TEXTURE_NODE0,
+            TextureNode::TEXTURE,
+        )
+        .unwrap();
+
+    // graph
+    //     .add_node_edge(TEXTURE_NODE0, bloom::BLUR_HORIZONTAL_PASS)
+    //     .unwrap();
     // graph
     //     .add_slot_edge(
-    //         bloom::BRIGHTNESS_PASS,
-    //         "brightness_input_texture",
+    //         TEXTURE_NODE0,
+    //         TextureNode::TEXTURE,
     //         bloom::BLUR_HORIZONTAL_PASS,
-    //         "horizontal_blur_texture",
+    //         blur_pipeline::BlurHorizontal::TEXTURE,
     //     )
     //     .unwrap();
 
@@ -170,23 +256,23 @@ pub(crate) fn add_bloom_graph(world: &mut World) {
 
     // Combine output of blur (color_attachment) with original inputs (color_attachment) -> color_attachment0 / color_attachment1
 
-    graph
-        .add_slot_edge(
-            bloom::WINDOW_SAMPLED_COLOUR,
-            WindowSwapChainNode::OUT_TEXTURE,
-            bloom::COMBINE_PASS,
-            "original_pixels",
-        )
-        .unwrap();
+    // graph
+    //     .add_slot_edge(
+    //         bloom::WINDOW_SAMPLED_COLOUR,
+    //         WindowSwapChainNode::OUT_TEXTURE,
+    //         bloom::COMBINE_PASS,
+    //         combine_pipeline::Combine::TEXTURE_ORIGINAL,
+    //     )
+    //     .unwrap();
 
-    graph
-        .add_slot_edge(
-            bloom::BLUR_VERTICAL_PASS,
-            "vertical_blur_texture",
-            bloom::COMBINE_PASS,
-            "bright_and_blur",
-        )
-        .unwrap();
+    // graph
+    //     .add_slot_edge(
+    //         bloom::BLUR_VERTICAL_PASS,
+    //         "vertical_blur_texture",
+    //         bloom::COMBINE_PASS,
+    //         combine_pipeline::Combine::IN_TEXTURE_BRIGHTBLUR,
+    //     )
+    //     .unwrap();
 
     // Add pipelines
 
